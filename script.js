@@ -12,7 +12,15 @@ let canvas, ctx;
 
 let selectedPrizeIndex = -1; // 添加选中奖项的索引
 
+// 音频相关变量
+let spinningSound = new Audio('sounds/spinning.mp3');
+let winSound = new Audio('sounds/win.mp3');
+let bgMusic = new Audio('sounds/bgm.mp3');
 
+// 设置音频循环播放
+spinningSound.loop = true;
+bgMusic.loop = true;
+bgMusic.volume = 0.25; // 背景音乐音量设为25%
 
 // 页面加载完成后初始化
 
@@ -39,6 +47,44 @@ window.onload = function() {
     // 初始化当前奖项显示
 
     updateCurrentPrize();
+
+    
+
+    // 设置背景音乐循环时只播放前18秒
+
+    bgMusic.addEventListener('timeupdate', function() {
+
+        if (this.currentTime >= 18) {
+
+            this.currentTime = 0;
+
+        }
+
+    });
+
+    
+
+    // 播放背景音乐
+
+    bgMusic.play().catch(error => {
+
+        console.log('自动播放被阻止，需要用户交互才能播放音乐');
+
+    });
+
+    
+
+    // 添加点击事件监听器来启动背景音乐
+
+    document.addEventListener('click', function() {
+
+        if (bgMusic.paused) {
+
+            bgMusic.play();
+
+        }
+
+    }, { once: true });
 
 };
 
@@ -392,15 +438,25 @@ function startSpin() {
 
     
 
+    // 播放转动音效
+
+    spinningSound.currentTime = Math.max(0, spinningSound.duration - 10);
+
+    spinningSound.volume = 0.7; // 转盘声音设为70%
+
+    spinningSound.play();
+
+    
+
     // 随机旋转圈数和角度
 
-    const initialAngle = Math.random() * 360; // 添加随机初始角度
+    const initialAngle = Math.random() * 360;
 
-    const totalSpins = 10 + Math.random() * 5; // 10-15圈
+    const totalSpins = 10 + Math.random() * 5;
 
-    const targetAngle = Math.random() * 360; // 最终停止角度
+    const targetAngle = Math.random() * 360;
 
-    const duration = 10000; // 旋转持续时间（毫秒）
+    const duration = 10000; // 10秒的转动时间
 
     const startTime = performance.now();
 
@@ -467,6 +523,42 @@ function startSpin() {
 // 处理中奖者
 
 function handleWinner(angle) {
+
+    // 停止转动音效
+
+    spinningSound.pause();
+
+    
+
+    // 播放中奖音效两遍
+
+    winSound.currentTime = 0;
+
+    winSound.volume = 1.0; // 中奖声音设为100%
+
+    
+
+    // 第一遍播放
+
+    winSound.play();
+
+    
+
+    // 监听第一遍播放结束，然后播放第二遍
+
+    winSound.addEventListener('ended', function playAgain() {
+
+        winSound.currentTime = 0;
+
+        winSound.play();
+
+        // 移除监听器，这样只会播放两遍
+
+        winSound.removeEventListener('ended', playAgain);
+
+    }, { once: true });
+
+    
 
     const sliceAngle = 360 / participants.length;
 
