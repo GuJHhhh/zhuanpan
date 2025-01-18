@@ -104,6 +104,10 @@ function addParticipant() {
 
         participants.push(name);
 
+        // 随机打乱参与者顺序
+
+        shuffleArray(participants);
+
         updateParticipantsList();
 
         drawWheel();
@@ -258,13 +262,17 @@ function clearParticipants() {
 
 // 绘制转盘
 
-function drawWheel() {
+function drawWheel(customParticipants) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     
 
-    if (participants.length === 0) {
+    const currentParticipants = customParticipants || participants;
+
+    
+
+    if (currentParticipants.length === 0) {
 
         drawEmptyWheel();
 
@@ -282,11 +290,11 @@ function drawWheel() {
 
     
 
-    const sliceAngle = (2 * Math.PI) / participants.length;
+    const sliceAngle = (2 * Math.PI) / currentParticipants.length;
 
     
 
-    participants.forEach((name, index) => {
+    currentParticipants.forEach((name, index) => {
 
         // 计算扇形的起始和结束角度
 
@@ -448,6 +456,12 @@ function startSpin() {
 
     
 
+    // 在开始旋转时保存当前参与者顺序
+
+    const currentParticipants = [...participants];
+
+    
+
     // 随机旋转圈数和角度
 
     const initialAngle = Math.random() * 360;
@@ -488,7 +502,7 @@ function startSpin() {
 
         ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-        drawWheel();
+        drawWheel(currentParticipants);
 
         ctx.restore();
 
@@ -680,11 +694,31 @@ function addBatchParticipants() {
 
     
 
+    // 随机打乱参与者顺序
+
+    shuffleArray(participants);
+
     updateParticipantsList();
 
     drawWheel();
 
     textarea.value = '';
+
+}
+
+
+
+// Fisher-Yates 洗牌算法
+
+function shuffleArray(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] = [array[j], array[i]];
+
+    }
 
 }
 
