@@ -13,10 +13,19 @@ let canvas, ctx;
 let selectedPrizeIndex = -1; // 添加选中奖项的索引
 
 // 音频相关变量
-let spinningSound = new Audio('./sounds/spinning.mp3');
-let winSound = new Audio('./sounds/win.mp3');
-let bgMusic = new Audio('./sounds/bgm.mp3');
-let awardSound = new Audio('./sounds/banjiang.mp3'); // 添加颁奖音乐
+let spinningSound = new Audio('sounds/spinning.mp3');
+let winSound = new Audio('sounds/win.mp3');
+let bgMusic = new Audio('sounds/bgm.mp3');
+let awardSound = new Audio('sounds/banjiang.MP3');
+
+// 预加载音频
+function preloadAudio(audio) {
+    return new Promise((resolve, reject) => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject);
+        audio.load();
+    });
+}
 
 // 设置音频循环播放
 spinningSound.loop = true;
@@ -24,69 +33,50 @@ bgMusic.loop = true;
 bgMusic.volume = 0.20; // 背景音乐音量设为20%
 
 // 页面加载完成后初始化
-
-window.onload = function() {
-
+window.onload = async function() {
     canvas = document.getElementById('wheelCanvas');
-
     ctx = canvas.getContext('2d');
-
     
-
     // 设置canvas尺寸
-
     canvas.width = 500;
-
     canvas.height = 500;
-
     
-
     // 初始化转盘
-
     drawWheel();
-
     // 初始化当前奖项显示
-
     updateCurrentPrize();
-
     
-
+    // 预加载所有音频
+    try {
+        await Promise.all([
+            preloadAudio(spinningSound),
+            preloadAudio(winSound),
+            preloadAudio(bgMusic),
+            preloadAudio(awardSound)
+        ]);
+        console.log('音频加载完成');
+    } catch (error) {
+        console.error('音频加载失败:', error);
+    }
+    
     // 设置背景音乐循环时只播放前18秒
-
     bgMusic.addEventListener('timeupdate', function() {
-
         if (this.currentTime >= 18) {
-
             this.currentTime = 0;
-
         }
-
     });
-
     
-
     // 播放背景音乐
-
     bgMusic.play().catch(error => {
-
         console.log('自动播放被阻止，需要用户交互才能播放音乐');
-
     });
-
     
-
     // 添加点击事件监听器来启动背景音乐
-
     document.addEventListener('click', function() {
-
         if (bgMusic.paused) {
-
             bgMusic.play();
-
         }
-
     }, { once: true });
-
 };
 
 
@@ -1164,15 +1154,32 @@ function showGroupAwardModal(winners) {
     createConfetti();
     
     // 播放颁奖音乐两遍
-    awardSound.currentTime = 0;
-    awardSound.volume = 1.0;
-    awardSound.play();
-    
-    // 监听第一遍播放结束，然后播放第二遍
-    awardSound.addEventListener('ended', function playAgain() {
+    const playAwardSound = () => {
         awardSound.currentTime = 0;
-        awardSound.play();
-        // 移除监听器，这样只会播放两遍
-        awardSound.removeEventListener('ended', playAgain);
-    }, { once: true });
+        awardSound.volume = 1.0;
+        let playCount = 0;
+        
+        const playNextTime = () => {
+            playCount++;
+            if (playCount < 2) {
+                awardSound.currentTime = 0;
+                awardSound.play().catch(error => {
+                    console.error('颁奖音乐播放失败:', error);
+                });
+            }
+        };
+        
+        awardSound.addEventListener('ended', playNextTime, { once: true });
+        awardSound.play().catch(error => {
+            console.error('颁奖音乐播放失败:', error);
+        });
+    };
+    
+    // 确保音频已加载完成后再播放
+    if (awardSound.readyState >= 2) {
+        playAwardSound();
+    } else {
+        awardSound.addEventListener('canplaythrough', playAwardSound, { once: true });
+        awardSound.load();
+    }
 } 
