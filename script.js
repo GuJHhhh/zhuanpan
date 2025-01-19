@@ -20,7 +20,7 @@ let bgMusic = new Audio('sounds/bgm.mp3');
 // 设置音频循环播放
 spinningSound.loop = true;
 bgMusic.loop = true;
-bgMusic.volume = 0.25; // 背景音乐音量设为25%
+bgMusic.volume = 0.20; // 背景音乐音量设为20%
 
 // 页面加载完成后初始化
 
@@ -185,6 +185,32 @@ function updateWinnersList() {
     list.innerHTML = '';
 
     
+
+    // 添加顶部按钮区域
+
+    const buttonGroup = document.createElement('div');
+
+    buttonGroup.className = 'winners-buttons';
+
+    
+
+    const awardAllButton = document.createElement('button');
+
+    awardAllButton.innerHTML = '🏆 颁奖';
+
+    awardAllButton.className = 'award-all-btn';
+
+    awardAllButton.onclick = () => showGroupAwardModal(winners);
+
+    
+
+    buttonGroup.appendChild(awardAllButton);
+
+    list.appendChild(buttonGroup);
+
+    
+
+    // 添加中奖记录
 
     winners.forEach(winner => {
 
@@ -1016,54 +1042,130 @@ function createConfetti() {
 
 
 
-// 导出中奖记录
+// 显示集体颁奖弹窗
 
-function exportWinners() {
+function showGroupAwardModal(winners) {
 
-    if (winners.length === 0) {
+    // 创建弹窗元素
 
-        alert('暂无中奖记录！');
+    const overlay = document.createElement('div');
 
-        return;
+    overlay.className = 'modal-overlay';
 
-    }
+    
 
+    const modal = document.createElement('div');
 
+    modal.className = 'modal award-modal group-award-modal';
 
-    // 创建CSV内容
+    
 
-    let csvContent = '时间,获奖者,奖项\n';
+    // 添加装饰元素
 
-    winners.forEach(winner => {
+    const decorations = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
-        csvContent += `${winner.time},${winner.name},${winner.prize}\n`;
+    decorations.forEach(position => {
+
+        const decoration = document.createElement('div');
+
+        decoration.className = `modal-decoration ${position}`;
+
+        modal.appendChild(decoration);
 
     });
 
+    
 
+    // 添加内容
 
-    // 创建Blob对象
+    const header = document.createElement('div');
 
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    header.className = 'modal-header';
 
-    const url = URL.createObjectURL(blob);
+    header.textContent = '🎊 荣耀时刻 🎊';
 
+    
 
+    const content = document.createElement('div');
 
-    // 创建下载链接
+    content.className = 'modal-content';
 
-    const link = document.createElement('a');
+    
 
-    link.href = url;
+    let winnersHtml = '<div class="trophy-animation">🏆</div><div class="award-text">';
 
-    link.download = '中奖记录.csv';
+    winnersHtml += '<div class="award-title">热烈祝贺以下获奖者：</div>';
 
-    document.body.appendChild(link);
+    winnersHtml += '<div class="winners-grid">';
 
-    link.click();
+    
 
-    document.body.removeChild(link);
+    winners.forEach(winner => {
 
-    URL.revokeObjectURL(url);
+        winnersHtml += `
+
+            <div class="winner-item">
+
+                <strong class="winner-name">${winner.name}</strong>
+
+                <span class="prize-name">${winner.prize}</span>
+
+            </div>
+
+        `;
+
+    });
+
+    
+
+    winnersHtml += '</div><div class="award-footer">愿这份荣誉激励你们继续前进！</div></div>';
+
+    content.innerHTML = winnersHtml;
+
+    
+
+    const button = document.createElement('button');
+
+    button.className = 'modal-button';
+
+    button.textContent = '关闭';
+
+    button.onclick = () => {
+
+        overlay.remove();
+
+        // 移除所有五彩纸屑
+
+        document.querySelectorAll('.confetti').forEach(el => el.remove());
+
+    };
+
+    
+
+    // 组装弹窗
+
+    modal.appendChild(header);
+
+    modal.appendChild(content);
+
+    modal.appendChild(button);
+
+    overlay.appendChild(modal);
+
+    document.body.appendChild(overlay);
+
+    
+
+    // 添加五彩纸屑效果
+
+    createConfetti();
+
+    
+
+    // 播放中奖音效
+
+    winSound.currentTime = 0;
+
+    winSound.play();
 
 } 
