@@ -16,6 +16,7 @@ let selectedPrizeIndex = -1; // 添加选中奖项的索引
 let spinningSound = new Audio('sounds/spinning.mp3');
 let winSound = new Audio('sounds/win.mp3');
 let bgMusic = new Audio('sounds/bgm.mp3');
+let awardSound = new Audio('sounds/banjiang.mp3'); // 添加颁奖音乐
 
 // 设置音频循环播放
 spinningSound.loop = true;
@@ -692,6 +693,28 @@ function handleWinner(angle) {
 
     showWinnerModal(winner, currentPrize.name);
 
+    
+
+    // 在中奖弹窗关闭后重新洗牌并重绘转盘
+
+    const modalCloseButton = document.querySelector('.modal-button');
+
+    modalCloseButton.addEventListener('click', () => {
+
+        // 重新洗牌
+
+        if (participants.length > 0) {
+
+            shuffleArray(participants);
+
+            // 重绘转盘
+
+            drawWheel();
+
+        }
+
+    }, { once: true });
+
 }
 
 
@@ -1046,6 +1069,14 @@ function createConfetti() {
 
 function showGroupAwardModal(winners) {
 
+    // 暂停背景音乐
+
+    const originalBgmVolume = bgMusic.volume;
+
+    bgMusic.volume = 0;
+
+    
+
     // 创建弹窗元素
 
     const overlay = document.createElement('div');
@@ -1093,79 +1124,55 @@ function showGroupAwardModal(winners) {
     
 
     let winnersHtml = '<div class="trophy-animation">🏆</div><div class="award-text">';
-
     winnersHtml += '<div class="award-title">热烈祝贺以下获奖者：</div>';
-
     winnersHtml += '<div class="winners-grid">';
-
     
-
     winners.forEach(winner => {
-
         winnersHtml += `
-
             <div class="winner-item">
-
                 <strong class="winner-name">${winner.name}</strong>
-
                 <span class="prize-name">${winner.prize}</span>
-
             </div>
-
         `;
-
     });
-
     
-
     winnersHtml += '</div><div class="award-footer">愿这份荣誉激励你们继续前进！</div></div>';
-
     content.innerHTML = winnersHtml;
-
     
-
     const button = document.createElement('button');
-
     button.className = 'modal-button';
-
     button.textContent = '关闭';
-
     button.onclick = () => {
-
         overlay.remove();
-
         // 移除所有五彩纸屑
-
         document.querySelectorAll('.confetti').forEach(el => el.remove());
-
+        // 恢复背景音乐音量
+        bgMusic.volume = originalBgmVolume;
+        // 停止颁奖音乐
+        awardSound.pause();
+        awardSound.currentTime = 0;
     };
-
     
-
     // 组装弹窗
-
     modal.appendChild(header);
-
     modal.appendChild(content);
-
     modal.appendChild(button);
-
     overlay.appendChild(modal);
-
     document.body.appendChild(overlay);
-
     
-
     // 添加五彩纸屑效果
-
     createConfetti();
-
     
-
-    // 播放中奖音效
-
-    winSound.currentTime = 0;
-
-    winSound.play();
-
+    // 播放颁奖音乐两遍
+    awardSound.currentTime = 0;
+    awardSound.volume = 1.0;
+    awardSound.play();
+    
+    // 监听第一遍播放结束，然后播放第二遍
+    awardSound.addEventListener('ended', function playAgain() {
+        awardSound.currentTime = 0;
+        awardSound.play();
+        // 移除监听器，这样只会播放两遍
+        awardSound.removeEventListener('ended', playAgain);
+    }, { once: true });
 } 
