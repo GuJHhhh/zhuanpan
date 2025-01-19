@@ -13,10 +13,10 @@ let canvas, ctx;
 let selectedPrizeIndex = -1; // 添加选中奖项的索引
 
 // 音频相关变量
-let spinningSound = new Audio('sounds/spinning.mp3');
-let winSound = new Audio('sounds/win.mp3');
-let bgMusic = new Audio('sounds/bgm.mp3');
-let awardSound = new Audio('sounds/banjiang.mp3'); // 添加颁奖音乐
+let spinningSound = new Audio('./sounds/spinning.mp3');
+let winSound = new Audio('./sounds/win.mp3');
+let bgMusic = new Audio('./sounds/bgm.mp3');
+let awardSound = new Audio('./sounds/banjiang.mp3'); // 添加颁奖音乐
 
 // 设置音频循环播放
 spinningSound.loop = true;
